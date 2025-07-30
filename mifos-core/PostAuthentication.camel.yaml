@@ -1,0 +1,73 @@
+- rest:
+    id: rest-authentication-api
+    path: /api/v1
+    post:
+      - id: post-authentication
+        description: Endpoint de autenticación que redirige a Fineract
+        path: /authentication
+        to: direct:handle-authentication
+        consumes: application/json
+        produces: application/json
+- route:
+    id: route-handle-authentication
+    from:
+      id: from-handle-authentication
+      uri: direct
+      parameters:
+        name: handle-authentication
+      steps:
+        - log:
+            id: log-request
+            message: "Procesando solicitud de autenticación: ${body}"
+        - setHeader:
+            id: set-content-type
+            name: Content-Type
+            expression:
+              constant:
+                id: constant-5e72
+                expression: application/json
+        - setHeader:
+            id: set-fineract-tenant-header
+            name: Fineract-Platform-TenantId
+            expression:
+              constant:
+                id: constant-dddf
+                expression: default
+        - setHeader:
+            id: set-accept
+            name: Accept
+            expression:
+              constant:
+                id: constant-6dca
+                expression: application/json
+        - setHeader:
+            id: set-http-method
+            name: CamelHttpMethod
+            expression:
+              constant:
+                id: constant-701b
+                expression: POST
+        - removeHeaders:
+            id: remove-http-headers
+            pattern: CamelHttp*
+        - removeHeader:
+            id: remove-request-uri
+            name: CamelHttpUri
+        - removeHeader:
+            id: remove-servlet-request
+            name: CamelHttpServletRequest
+        - to:
+            id: forward-to-fineract
+            uri: http
+            parameters:
+              httpUri: >-
+                ec2-18-227-49-5.us-east-2.compute.amazonaws.com:8443/fineract-provider/api/v1/authentication?bridgeEndpoint=true&throwExceptionOnFailure=false
+        - log:
+            id: log-response
+            message: "Respuesta recibida de Fineract: ${body}"
+        - to:
+            id: to-718a
+            uri: kamelet:kafka-not-secured-sink
+            parameters:
+              topic: test
+              bootstrapServers: kafka:9093
