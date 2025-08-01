@@ -69,5 +69,5 @@
             id: to-718a
             uri: kamelet:kafka-not-secured-sink
             parameters:
-              topic: test
+              topic: Auth
               bootstrapServers: kafka:9093
